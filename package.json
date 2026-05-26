@@ -1,0 +1,17 @@
+{
+  "name": "saveweb2zip-dhl-visual-clean",
+  "version": "1.0.0",
+  "description": "Static DHL visual replica without tracking and analytics",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^5.2.11"
+  }
+}
