@@ -144,6 +144,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 /* Premium Tracking Results Styles - Front-End Masterpiece */
 header, 
@@ -1343,6 +1345,14 @@ body > *:not(#custom-masterpiece-app) {
           <input type="text" id="adm-client-destination" class="ask-input" placeholder="Ex: CURITIBA, PR" required autocomplete="off">
         </div>
         <div>
+          <label style="display:block; font-weight: 900; color: #4a5568; margin-bottom: 8px; font-size:1.1rem;">País de Destino</label>
+          <select id="adm-client-country" class="ask-input" style="background-color: white;" required>
+            <option value="BRASIL" selected>Brasil</option>
+            <option value="PARAGUAY">Paraguay</option>
+            <option value="URUGUAY">Uruguay</option>
+          </select>
+        </div>
+        <div>
           <label style="display:block; font-weight: 900; color: #4a5568; margin-bottom: 8px; font-size:1.1rem;">Horário/Data de Envio</label>
           <input type="datetime-local" id="adm-client-ship-time" class="ask-input" required>
         </div>
@@ -1455,6 +1465,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const clientPhone = document.getElementById('adm-client-phone').value.trim();
       const clientStreet = document.getElementById('adm-client-street').value.trim();
       const clientDest = document.getElementById('adm-client-destination').value.trim().toUpperCase();
+      const clientCountry = document.getElementById('adm-client-country').value.trim().toUpperCase();
       const shipTime = document.getElementById('adm-client-ship-time').value;
 
       const admSubmitBtn = document.getElementById('adm-submit-btn');
@@ -1474,6 +1485,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (supabaseClient) {
           const parsedTime = new Date(shipTime);
           
+          const rawState = (clientDest.split(',')[1] || 'PR').trim();
+          
           // Insert Shipment into Supabase
           const { data: newShipment, error: insertError } = await supabaseClient
             .from('shipments')
@@ -1484,7 +1497,7 @@ document.addEventListener('DOMContentLoaded', () => {
               origin_city: 'BRUSQUE',
               origin_state: 'SC',
               destination_city: clientDest.split(',')[0].trim(),
-              destination_state: (clientDest.split(',')[1] || 'PR').trim(),
+              destination_state: `${rawState}|${clientCountry}`,
               client_name: clientName,
               client_phone: clientPhone,
               client_street: clientStreet,
@@ -1635,6 +1648,10 @@ document.addEventListener('DOMContentLoaded', () => {
           // Route block update
           const routeInfoEl = document.querySelector('.custom-route-info');
           if (routeInfoEl) {
+            const destStateRaw = trackingData.destination_state || 'PR';
+            const destState = destStateRaw.split('|')[0].trim();
+            const destCountry = destStateRaw.split('|')[1]?.trim() || 'BRASIL';
+
             routeInfoEl.innerHTML = `
               <div class="route-block">
                 <span class="route-label">Origem:</span>
@@ -1642,7 +1659,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
               <div class="route-block">
                 <span class="route-label">Destino:</span>
-                <span class="route-value">${trackingData.destination_city || 'CURITIBA'}, ${trackingData.destination_state || 'PR'}<br><span style="font-weight:normal; font-size:0.95rem; color:#718096;">BRASIL</span></span>
+                <span class="route-value">${trackingData.destination_city || 'CURITIBA'}, ${destState}<br><span style="font-weight:normal; font-size:0.95rem; color:#718096;">${destCountry}</span></span>
               </div>
             `;
           }
@@ -1810,6 +1827,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+
+
 
 
 
