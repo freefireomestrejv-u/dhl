@@ -142,6 +142,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 /* Premium Tracking Results Styles - Front-End Masterpiece */
 header, 
@@ -1043,6 +1045,7 @@ body > *:not(#custom-masterpiece-app) {
         <input type="text" id="masterpiece-tracking-input" class="home-input-field" placeholder="Digite seu(s) número(s) de rastreamento" required autocomplete="off">
         <button type="submit" class="home-submit-btn">Rastrear</button>
       </form>
+      <p id="search-error-msg" style="color: #d8232a; font-weight: bold; text-align: center; margin-top: 15px; display: none; font-size: 1.1rem; font-family: inherit;">Código de rastreio não encontrado. Verifique e tente novamente.</p>
     </div>
 
     <!-- Clean Accordion FAQs -->
@@ -1554,6 +1557,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (searchForm && searchInput) {
     searchForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const errorMsg = document.getElementById('search-error-msg');
+      if (errorMsg) errorMsg.style.display = 'none';
+
       const code = searchInput.value.trim();
       if (!code) return;
 
@@ -1765,62 +1771,17 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
           }
         } else {
-          // Graceful fallback simulator when code is not found in database
-          console.warn('Rastreamento não encontrado no banco Supabase. Iniciando simulação local...');
-          
-          document.getElementById('custom-tracking-number-title').textContent = code;
-          document.getElementById('custom-detail-code').textContent = Math.floor(10000000 + Math.random() * 90000000);
-          document.getElementById('custom-detail-conf').textContent = code;
-          document.getElementById('custom-status-date').textContent = defaultDateStr;
-
-          const statusTitleEl = document.querySelector('.status-title');
-          if (statusTitleEl) statusTitleEl.textContent = 'PEDIDO ENVIADO';
-
-          const routeInfoEl = document.querySelector('.custom-route-info');
-          if (routeInfoEl) {
-            routeInfoEl.innerHTML = `
-              <div class="route-block">
-                <span class="route-label">Origem:</span>
-                <span class="route-value">BRUSQUE, SC<br><span style="font-weight:normal; font-size:0.95rem; color:#718096;">BRASIL</span></span>
-              </div>
-              <div class="route-block">
-                <span class="route-label">Destino:</span>
-                <span class="route-value">CURITIBA, PR<br><span style="font-weight:normal; font-size:0.95rem; color:#718096;">BRASIL</span></span>
-              </div>
-            `;
+          // Display error message when tracking number is not found
+          console.warn('Rastreamento não encontrado no banco Supabase.');
+          const errorMsg = document.getElementById('search-error-msg');
+          if (errorMsg) {
+            errorMsg.style.display = 'block';
           }
-
-          const timelineContainer = document.querySelector('.custom-timeline');
-          if (timelineContainer) {
-            const shortOptions = { month: 'short', day: 'numeric', year: 'numeric' };
-            let shortDateString = now.toLocaleDateString('pt-BR', shortOptions);
-            timelineContainer.innerHTML = `
-              <div class="timeline-date-group">
-                <div class="timeline-date-header">${shortDateString}</div>
-                <div class="timeline-event-row">
-                  <div class="event-time">${formatTime(now)}<br><span class="time-zone">LT</span></div>
-                  <div class="event-line-wrapper">
-                    <div class="event-dot green"></div>
-                    <div class="event-line"></div>
-                  </div>
-                  <div class="event-details green-badge">
-                    <span>PEDIDO ENVIADO</span>
-                  </div>
-                </div>
-              </div>
-              <div class="timeline-date-group awaiting-group">
-                <div class="timeline-event-row">
-                  <div class="event-time" style="color: #cbd5e0;">--:--</div>
-                  <div class="event-line-wrapper">
-                    <div class="event-dot gray"></div>
-                  </div>
-                  <div class="event-details-text">
-                    <span class="awaiting-text">Aguardando atualizações...</span>
-                  </div>
-                </div>
-              </div>
-            `;
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Rastrear';
           }
+          return;
         }
 
         // Display results
@@ -1849,6 +1810,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+
+
 
 
 
