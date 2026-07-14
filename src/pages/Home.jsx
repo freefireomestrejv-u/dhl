@@ -1,6 +1,6 @@
 import Button from "../components/Button";
 
-export default function Home({ onPlay, onAdmin, onCodes }) {
+export default function Home({ onPlay, onAdmin, onCodes, onInstructions }) {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 py-16 text-center safe-top safe-bottom">
       <div className="flex size-36 items-center justify-center overflow-hidden rounded-2xl">
@@ -30,6 +30,9 @@ export default function Home({ onPlay, onAdmin, onCodes }) {
         </Button>
         <Button variant="secondary" className="w-full" onClick={onCodes}>
           Ver códigos completos
+        </Button>
+        <Button variant="secondary" className="w-full" onClick={onInstructions}>
+          Ver instruções
         </Button>
         <Button variant="secondary" className="w-full" onClick={onAdmin}>
           Painel do admin
