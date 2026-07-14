@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@theme {
+  /* Palette — white surface + royal blue accent, per brief */
+  --color-royal: #3452d9;
+  --color-royal-dark: #283f9e;
+  --color-royal-light: #5b78ea;
+  --color-royal-tint: #eef1fe;
+
+  --color-ink: #14151a;
+  --color-ink-muted: #6b6f76;
+  --color-line: #e7e8ec;
+  --color-line-strong: #d3d5db;
+
+  --color-success: #1e8e5a;
+  --color-success-tint: #eaf7f0;
+  --color-error: #d6432e;
+  --color-error-tint: #fcece9;
+
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --shadow-card: 0 1px 2px rgba(20, 21, 26, 0.04), 0 8px 24px rgba(20, 21, 26, 0.06);
+  --shadow-button: 0 1px 2px rgba(52, 82, 217, 0.06), 0 6px 16px rgba(52, 82, 217, 0.22);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: white;
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-royal-tint);
+    color: var(--color-royal-dark);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-royal);
+    outline-offset: 2px;
+  }
+
+  /* tabular numbers everywhere numeric codes appear */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* the "PLU sticker" motif — dashed, perforated-label look used for
+     the upload dropzone and the correct-code reveal chip */
+  .sticker-edge {
+    border: 1.5px dashed var(--color-line-strong);
+  }
+
+  .safe-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes fade-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide {
+  animation: fade-slide-up 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
