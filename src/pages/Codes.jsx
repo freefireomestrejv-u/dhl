@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase, isSupabaseConfigured, ITEMS_TABLE } from "../lib/supabaseClient";
 import Button from "../components/Button";
 import {
@@ -6,11 +6,13 @@ import {
   IconLoader,
   IconImageOff,
   IconX,
+  IconSearch,
 } from "../components/icons";
 
 export default function Codes({ onBack }) {
   const [status, setStatus] = useState("loading"); // loading | error | ready
   const [items, setItems] = useState([]);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     loadItems();
@@ -26,7 +28,7 @@ export default function Codes({ onBack }) {
 
     const { data, error } = await supabase
       .from(ITEMS_TABLE)
-      .select("id, name, code, image_url")
+      .select("id, name, code, image_url, unit_type")
       .order("name", { ascending: true });
 
     if (error) {
@@ -37,6 +39,15 @@ export default function Codes({ onBack }) {
     setItems(data ?? []);
     setStatus("ready");
   }
+
+  const filteredItems = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter(
+      (item) =>
+        item.name.toLowerCase().includes(q) || item.code.toLowerCase().includes(q)
+    );
+  }, [items, query]);
 
   const topBar = (
     <div className="flex items-center gap-3 px-5 pt-5 safe-top">
@@ -57,7 +68,22 @@ export default function Codes({ onBack }) {
     <div className="mx-auto flex min-h-dvh max-w-md flex-col pb-16">
       {topBar}
 
-      <div className="mx-5 mt-6 flex flex-col gap-2">
+      {status === "ready" && items.length > 0 && (
+        <div className="mx-5 mt-5">
+          <div className="flex items-center gap-2 rounded-xl border border-line bg-white px-4 py-3 focus-within:border-royal">
+            <IconSearch className="size-4.5 shrink-0 text-ink-muted" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por nome ou código"
+              className="w-full text-[15px] text-ink placeholder:text-ink-muted focus:outline-none"
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="mx-5 mt-4 flex flex-col gap-2">
         {status === "loading" && (
           <div className="flex items-center justify-center gap-2 py-8 text-ink-muted">
             <IconLoader className="size-4.5 animate-spin" />
@@ -85,8 +111,14 @@ export default function Codes({ onBack }) {
           </p>
         )}
 
+        {status === "ready" && items.length > 0 && filteredItems.length === 0 && (
+          <p className="rounded-2xl border border-dashed border-line-strong px-4 py-6 text-center text-sm text-ink-muted">
+            Nenhum item encontrado para "{query}".
+          </p>
+        )}
+
         {status === "ready" &&
-          items.map((item) => (
+          filteredItems.map((item) => (
             <div
               key={item.id}
               className="flex items-center gap-3 rounded-xl border border-line bg-white p-2.5"
@@ -107,6 +139,9 @@ export default function Codes({ onBack }) {
                 <p className="truncate text-[14px] font-medium text-ink">
                   {item.name}
                 </p>
+                <span className="rounded-full bg-black/[0.04] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
+                  {item.unit_type === "peso" ? "Peso" : "Unidade"}
+                </span>
               </div>
 
               <div className="tnum shrink-0 rounded-lg bg-black/[0.03] px-3 py-1.5 font-mono text-sm font-semibold tracking-wider text-ink">
