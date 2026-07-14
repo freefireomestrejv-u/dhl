@@ -1,11 +1,14 @@
 import Button from "../components/Button";
-import { IconTag } from "../components/icons";
 
 export default function Home({ onPlay, onAdmin }) {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 py-16 text-center safe-top safe-bottom">
-      <div className="flex size-14 items-center justify-center rounded-2xl bg-royal-tint text-royal">
-        <IconTag className="size-7" />
+      <div className="flex size-36 items-center justify-center overflow-hidden rounded-2xl">
+        <img
+          src="https://i.postimg.cc/Qt6F5vhh/images-8.jpg"
+          alt="Logo do mercado"
+          className="size-full object-contain"
+        />
       </div>
 
       <p className="mt-6 text-xs font-semibold tracking-[0.18em] text-royal uppercase">
