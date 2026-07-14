@@ -204,7 +204,7 @@ export default function Quiz({ onBack }) {
             key={current.id}
             className="flex w-full animate-fade-slide flex-col items-center"
           >
-            <div className="aspect-4/3 w-full overflow-hidden rounded-2xl border border-line bg-royal-tint/40 shadow-[var(--shadow-card)]">
+            <div className="aspect-4/3 w-full overflow-hidden rounded-2xl bg-royal-tint/40">
               {current.image_url ? (
                 <img
                   src={current.image_url}
