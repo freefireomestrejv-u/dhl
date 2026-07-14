@@ -5,8 +5,10 @@ export default function Home({ onPlay, onAdmin, onCodes, onInstructions }) {
     <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 py-16 text-center safe-top safe-bottom">
       <div className="flex size-36 items-center justify-center overflow-hidden rounded-2xl">
         <img
-          src="https://i.postimg.cc/Qt6F5vhh/images-8.jpg"
+          src="/logo.png"
           alt="Logo do mercado"
+          fetchpriority="high"
+          decoding="async"
           className="size-full object-contain"
         />
       </div>
@@ -28,10 +30,10 @@ export default function Home({ onPlay, onAdmin, onCodes, onInstructions }) {
         <Button variant="primary" className="w-full" onClick={onPlay}>
           Teste de memória
         </Button>
-        <Button variant="secondary" className="w-full" onClick={onCodes}>
+        <Button variant="yellow" className="w-full" onClick={onCodes}>
           Ver códigos completos
         </Button>
-        <Button variant="secondary" className="w-full" onClick={onInstructions}>
+        <Button variant="dark" className="w-full" onClick={onInstructions}>
           Ver instruções
         </Button>
         <Button variant="secondary" className="w-full" onClick={onAdmin}>
