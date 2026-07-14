@@ -1,3 +1,4 @@
+
 const VARIANTS = {
   primary:
     "bg-royal text-white shadow-[var(--shadow-button)] hover:bg-royal-dark active:bg-royal-dark disabled:bg-royal/50",
@@ -7,6 +8,10 @@ const VARIANTS = {
     "bg-transparent text-ink-muted hover:text-ink hover:bg-black/[0.03] disabled:opacity-50",
   danger:
     "bg-transparent text-error hover:bg-error-tint disabled:opacity-50",
+  yellow:
+    "bg-[#F5C518] text-ink hover:bg-[#E3B70F] active:bg-[#E3B70F] disabled:opacity-50",
+  dark:
+    "bg-ink text-white hover:bg-black active:bg-black disabled:opacity-50",
 };
 
 export default function Button({
