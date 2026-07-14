@@ -12,6 +12,7 @@ import {
   IconTrash,
   IconLoader,
   IconX,
+  IconEdit,
 } from "../components/icons";
 
 const SESSION_KEY = "sj_admin_ok";
@@ -123,14 +124,19 @@ export default function Admin({ onBack }) {
   return <AdminPanel topBar={topBar} />;
 }
 
+const EMPTY_FORM = { name: "", code: "", unitType: "unidade" };
+
 function AdminPanel({ topBar }) {
   const [items, setItems] = useState([]);
   const [itemsLoading, setItemsLoading] = useState(true);
 
-  const [name, setName] = useState("");
-  const [code, setCode] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [name, setName] = useState(EMPTY_FORM.name);
+  const [code, setCode] = useState(EMPTY_FORM.code);
+  const [unitType, setUnitType] = useState(EMPTY_FORM.unitType);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+  const [existingImageUrl, setExistingImageUrl] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -145,10 +151,33 @@ function AdminPanel({ topBar }) {
     setItemsLoading(true);
     const { data, error } = await supabase
       .from(ITEMS_TABLE)
-      .select("id, name, code, image_url, created_at")
+      .select("id, name, code, image_url, unit_type, created_at")
       .order("created_at", { ascending: false });
     if (!error) setItems(data ?? []);
     setItemsLoading(false);
+  }
+
+  function resetForm() {
+    setEditingId(null);
+    setName(EMPTY_FORM.name);
+    setCode(EMPTY_FORM.code);
+    setUnitType(EMPTY_FORM.unitType);
+    setImageFile(null);
+    setImagePreviewUrl(null);
+    setExistingImageUrl(null);
+    setSubmitError("");
+  }
+
+  function startEdit(item) {
+    setEditingId(item.id);
+    setName(item.name);
+    setCode(item.code);
+    setUnitType(item.unit_type || "unidade");
+    setImageFile(null);
+    setImagePreviewUrl(null);
+    setExistingImageUrl(item.image_url);
+    setSubmitError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function handleFileChange(e) {
@@ -169,7 +198,7 @@ function AdminPanel({ topBar }) {
 
     setSubmitting(true);
     try {
-      let imageUrl = null;
+      let imageUrl = editingId ? existingImageUrl : null;
 
       if (imageFile) {
         const ext = imageFile.name.split(".").pop() || "jpg";
@@ -185,18 +214,33 @@ function AdminPanel({ topBar }) {
         imageUrl = publicData.publicUrl;
       }
 
-      const { data: inserted, error: insertError } = await supabase
-        .from(ITEMS_TABLE)
-        .insert({ name: name.trim(), code: code.trim(), image_url: imageUrl })
-        .select()
-        .single();
-      if (insertError) throw insertError;
+      const payload = {
+        name: name.trim(),
+        code: code.trim(),
+        unit_type: unitType,
+        image_url: imageUrl,
+      };
 
-      setItems((prev) => [inserted, ...prev]);
-      setName("");
-      setCode("");
-      setImageFile(null);
-      setImagePreviewUrl(null);
+      if (editingId) {
+        const { data: updated, error: updateError } = await supabase
+          .from(ITEMS_TABLE)
+          .update(payload)
+          .eq("id", editingId)
+          .select()
+          .single();
+        if (updateError) throw updateError;
+        setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)));
+      } else {
+        const { data: inserted, error: insertError } = await supabase
+          .from(ITEMS_TABLE)
+          .insert(payload)
+          .select()
+          .single();
+        if (insertError) throw insertError;
+        setItems((prev) => [inserted, ...prev]);
+      }
+
+      resetForm();
     } catch (err) {
       setSubmitError("Não foi possível salvar o item. Tente novamente.");
     } finally {
@@ -225,12 +269,15 @@ function AdminPanel({ topBar }) {
         await supabase.storage.from(IMAGES_BUCKET).remove([path]);
       }
       setItems((prev) => prev.filter((i) => i.id !== item.id));
+      if (editingId === item.id) resetForm();
     } catch (err) {
       // falha silenciosa — o item continua na lista para nova tentativa
     } finally {
       setDeletingId(null);
     }
   }
+
+  const previewSrc = imagePreviewUrl || existingImageUrl;
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col pb-16">
@@ -240,11 +287,24 @@ function AdminPanel({ topBar }) {
         onSubmit={handleSubmit}
         className="mx-5 mt-6 flex flex-col gap-4 rounded-2xl border border-line bg-white p-5 shadow-[var(--shadow-card)]"
       >
+        {editingId && (
+          <div className="flex items-center justify-between rounded-xl bg-royal-tint px-3 py-2">
+            <p className="text-xs font-semibold text-royal">Editando item</p>
+            <button
+              type="button"
+              onClick={resetForm}
+              className="text-xs font-semibold text-royal underline"
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
+
         <label className="sticker-edge relative flex aspect-4/3 w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl bg-royal-tint/30 text-royal transition-colors hover:bg-royal-tint/50">
-          {imagePreviewUrl ? (
+          {previewSrc ? (
             <>
               <img
-                src={imagePreviewUrl}
+                src={previewSrc}
                 alt="Pré-visualização"
                 className="absolute inset-0 size-full object-cover"
               />
@@ -296,6 +356,34 @@ function AdminPanel({ topBar }) {
           />
         </div>
 
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold text-ink-muted">Tipo de contagem</span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setUnitType("unidade")}
+              className={`flex-1 rounded-xl border px-4 py-3 text-[15px] font-medium transition-colors ${
+                unitType === "unidade"
+                  ? "border-royal bg-royal-tint text-royal"
+                  : "border-line bg-white text-ink-muted hover:border-line-strong"
+              }`}
+            >
+              Unidade
+            </button>
+            <button
+              type="button"
+              onClick={() => setUnitType("peso")}
+              className={`flex-1 rounded-xl border px-4 py-3 text-[15px] font-medium transition-colors ${
+                unitType === "peso"
+                  ? "border-royal bg-royal-tint text-royal"
+                  : "border-line bg-white text-ink-muted hover:border-line-strong"
+              }`}
+            >
+              Peso
+            </button>
+          </div>
+        </div>
+
         {submitError && (
           <p className="text-sm font-medium text-error">{submitError}</p>
         )}
@@ -307,7 +395,11 @@ function AdminPanel({ topBar }) {
           disabled={submitting}
           icon={submitting ? <IconLoader className="size-4.5 animate-spin" /> : null}
         >
-          {submitting ? "Salvando…" : "Adicionar item"}
+          {submitting
+            ? "Salvando…"
+            : editingId
+              ? "Salvar alterações"
+              : "Adicionar item"}
         </Button>
       </form>
 
@@ -335,7 +427,9 @@ function AdminPanel({ topBar }) {
           items.map((item) => (
             <div
               key={item.id}
-              className="flex items-center gap-3 rounded-xl border border-line bg-white p-2.5"
+              className={`flex items-center gap-3 rounded-xl border bg-white p-2.5 ${
+                editingId === item.id ? "border-royal" : "border-line"
+              }`}
             >
               <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-royal-tint/40">
                 {item.image_url ? (
@@ -351,8 +445,21 @@ function AdminPanel({ topBar }) {
 
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[14px] font-medium text-ink">{item.name}</p>
-                <p className="tnum font-mono text-xs text-ink-muted">{item.code}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="tnum font-mono text-xs text-ink-muted">{item.code}</p>
+                  <span className="rounded-full bg-black/[0.04] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
+                    {item.unit_type === "peso" ? "Peso" : "Unidade"}
+                  </span>
+                </div>
               </div>
+
+              <button
+                onClick={() => startEdit(item)}
+                className="flex h-9 shrink-0 items-center justify-center rounded-lg px-2.5 text-ink-muted transition-colors hover:bg-royal-tint hover:text-royal"
+                aria-label="Editar item"
+              >
+                <IconEdit />
+              </button>
 
               <button
                 onClick={() => handleDeleteClick(item)}
