@@ -4,7 +4,9 @@ import {
   isSupabaseConfigured,
   ITEMS_TABLE,
   PLAYERS_TABLE,
+  PROGRESS_TABLE,
 } from "../lib/supabaseClient";
+import { shuffle, normalizeAnswer as normalize } from "../lib/quizUtils";
 import Button from "../components/Button";
 import {
   IconArrowLeft,
@@ -14,24 +16,14 @@ import {
   IconImageOff,
 } from "../components/icons";
 
-function shuffle(array) {
-  const copy = [...array];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-
-function normalize(value) {
-  return String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // remove acentos, til, cedilha etc.
-    .trim()
-    .toUpperCase();
-}
-
-export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, onPeakUpdate }) {
+export default function Quiz({
+  onBack,
+  player,
+  difficulty,
+  onChangeDifficulty,
+  onPeakUpdate,
+  onGamesPlayedUpdate,
+}) {
   const [status, setStatus] = useState("loading"); // loading | error | ready
   const [errorMessage, setErrorMessage] = useState("");
   const [items, setItems] = useState([]);
@@ -47,6 +39,7 @@ export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, o
   });
   const [peakSaved, setPeakSaved] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(false);
+  const [gamesCounted, setGamesCounted] = useState(false);
 
   useEffect(() => {
     loadItems();
@@ -65,9 +58,27 @@ export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, o
       return;
     }
 
-    const { data, error } = await supabase
+    // Itens marcados como "ponto fraco" saem do teste de memória normal —
+    // eles só aparecem no modo de treino, até serem dominados de novo.
+    let weakIds = [];
+    if (player) {
+      const { data: weakRows } = await supabase
+        .from(PROGRESS_TABLE)
+        .select("item_id")
+        .eq("player_id", player.id)
+        .eq("is_weak", true);
+      weakIds = (weakRows ?? []).map((r) => r.item_id);
+    }
+
+    let query = supabase
       .from(ITEMS_TABLE)
       .select("id, name, code, image_url, unit_type, item_type");
+
+    if (weakIds.length > 0) {
+      query = query.not("id", "in", `(${weakIds.join(",")})`);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       setErrorMessage("Não foi possível carregar os itens. Tente novamente.");
@@ -91,6 +102,44 @@ export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, o
     setInput("");
     setPeakSaved(false);
     setIsNewRecord(false);
+  }
+
+  // Registra o resultado da resposta para aquele item específico. Se ela
+  // acertar, zera os erros seguidos daquele item. Se errar, soma +1, e ao
+  // chegar a 2 erros seguidos, marca o item como "ponto fraco" — ele some
+  // do teste de memória e passa a aparecer só no modo de treino.
+  async function recordAttempt(itemId, wasCorrect) {
+    if (!player || !itemId) return;
+
+    const { data: existing } = await supabase
+      .from(PROGRESS_TABLE)
+      .select("id, consecutive_misses")
+      .eq("player_id", player.id)
+      .eq("item_id", itemId)
+      .maybeSingle();
+
+    if (wasCorrect) {
+      if (existing && existing.consecutive_misses > 0) {
+        await supabase
+          .from(PROGRESS_TABLE)
+          .update({ consecutive_misses: 0 })
+          .eq("id", existing.id);
+      }
+      return;
+    }
+
+    const nextMisses = (existing?.consecutive_misses ?? 0) + 1;
+    const becomesWeak = nextMisses >= 2;
+
+    await supabase.from(PROGRESS_TABLE).upsert(
+      {
+        player_id: player.id,
+        item_id: itemId,
+        consecutive_misses: becomesWeak ? 0 : nextMisses,
+        ...(becomesWeak ? { is_weak: true } : {}),
+      },
+      { onConflict: "player_id,item_id" }
+    );
   }
 
   const current = items[currentIndex];
@@ -134,6 +183,31 @@ export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished]);
 
+  // Cada teste de memória concluído (fácil ou difícil) conta como uma
+  // partida jogada — usado para liberar o modo "Treinar ponto fraco" só
+  // depois de 5 partidas.
+  useEffect(() => {
+    if (!finished || !player || gamesCounted) return;
+    setGamesCounted(true);
+
+    (async () => {
+      const { data } = await supabase
+        .from(PLAYERS_TABLE)
+        .select("games_played")
+        .eq("id", player.id)
+        .maybeSingle();
+
+      const nextGamesPlayed = (data?.games_played ?? 0) + 1;
+      const { error } = await supabase
+        .from(PLAYERS_TABLE)
+        .update({ games_played: nextGamesPlayed })
+        .eq("id", player.id);
+
+      if (!error) onGamesPlayedUpdate?.(nextGamesPlayed);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished]);
+
   function handleSubmit(e) {
     e.preventDefault();
     if (feedback || !current) return;
@@ -143,6 +217,7 @@ export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, o
       correct: s.correct + (correct ? 1 : 0),
       wrong: s.wrong + (correct ? 0 : 1),
     }));
+    recordAttempt(current.id, correct);
   }
 
   function handleNext() {
