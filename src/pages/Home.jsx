@@ -1,6 +1,14 @@
 import Button from "../components/Button";
+import { IconTarget } from "../components/icons";
 
-export default function Home({ onPlay, onAdmin, onCodes, onInstructions, onRanking }) {
+export default function Home({
+  onPlay,
+  onWeakSpot,
+  onAdmin,
+  onCodes,
+  onInstructions,
+  onRanking,
+}) {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 py-16 text-center safe-top safe-bottom">
       <div className="flex size-36 items-center justify-center overflow-hidden rounded-2xl">
@@ -29,6 +37,14 @@ export default function Home({ onPlay, onAdmin, onCodes, onInstructions, onRanki
       <div className="mt-10 flex w-full flex-col gap-3">
         <Button variant="primary" className="w-full" onClick={onPlay}>
           Teste de memória
+        </Button>
+        <Button
+          variant="secondary"
+          className="w-full"
+          icon={<IconTarget className="size-4.5" />}
+          onClick={onWeakSpot}
+        >
+          Treinar ponto fraco
         </Button>
         <Button variant="tint" className="w-full" onClick={onRanking}>
           Ranking
