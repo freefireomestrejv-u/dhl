@@ -155,6 +155,35 @@ export function IconSearch({ className = "size-5" }) {
   );
 }
 
+export function IconEye({ className = "size-6" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+export function IconEyeOff({ className = "size-6" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M3 3l18 18M10.6 10.6a3 3 0 004.2 4.2M9.5 5.2A10.6 10.6 0 0112 5c6.4 0 10 7 10 7a13.6 13.6 0 01-3.2 4M6.5 6.7C4 8.4 2 12 2 12s3.6 7 10 7c1.3 0 2.5-.2 3.6-.6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function IconHelp({ className = "size-6" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
