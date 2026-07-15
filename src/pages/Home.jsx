@@ -1,6 +1,6 @@
 import Button from "../components/Button";
 
-export default function Home({ onPlay, onAdmin, onCodes, onInstructions }) {
+export default function Home({ onPlay, onAdmin, onCodes, onInstructions, onRanking }) {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 py-16 text-center safe-top safe-bottom">
       <div className="flex size-36 items-center justify-center overflow-hidden rounded-2xl">
@@ -29,6 +29,9 @@ export default function Home({ onPlay, onAdmin, onCodes, onInstructions }) {
       <div className="mt-10 flex w-full flex-col gap-3">
         <Button variant="primary" className="w-full" onClick={onPlay}>
           Teste de memória
+        </Button>
+        <Button variant="secondary" className="w-full" onClick={onRanking}>
+          Ranking
         </Button>
         <Button variant="yellow" className="w-full" onClick={onCodes}>
           Ver códigos completos
