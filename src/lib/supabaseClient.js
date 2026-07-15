@@ -23,6 +23,10 @@ export const IMAGES_BUCKET = "item-images";
 
 export const PLAYERS_TABLE = "players";
 
+// Progresso por jogador+item: contagem de erros seguidos no teste de memória
+// e sequência de acertos no modo "Treinar ponto fraco".
+export const PROGRESS_TABLE = "player_item_progress";
+
 // Unidades disponíveis na criação de usuário do ranking.
 export const UNITS = [
   "Araçoiaba",
