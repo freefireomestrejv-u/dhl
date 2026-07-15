@@ -1,5 +1,4 @@
 import Button from "../components/Button";
-import { IconTarget } from "../components/icons";
 
 export default function Home({
   onPlay,
@@ -38,12 +37,7 @@ export default function Home({
         <Button variant="primaryDark" className="w-full" onClick={onPlay}>
           Teste de memória
         </Button>
-        <Button
-          variant="primary"
-          className="w-full"
-          icon={<IconTarget className="size-4.5" />}
-          onClick={onWeakSpot}
-        >
+        <Button variant="primary" className="w-full" onClick={onWeakSpot}>
           Treinar ponto fraco
         </Button>
         <Button variant="tint" className="w-full" onClick={onRanking}>
