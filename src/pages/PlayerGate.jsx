@@ -82,7 +82,7 @@ export default function PlayerGate({ onBack, onEnter }) {
     setSubmitting(true);
     const { data, error: fetchError } = await supabase
       .from(PLAYERS_TABLE)
-      .select("id, name, unit, best_correct, best_wrong, password")
+      .select("id, name, unit, best_correct, best_wrong, games_played, password")
       .eq("name", trimmedName)
       .maybeSingle();
     setSubmitting(false);
@@ -160,8 +160,9 @@ export default function PlayerGate({ onBack, onEnter }) {
         unit,
         best_correct: 0,
         best_wrong: 0,
+        games_played: 0,
       })
-      .select("id, name, unit, best_correct, best_wrong, password")
+      .select("id, name, unit, best_correct, best_wrong, games_played, password")
       .single();
 
     setSubmitting(false);
