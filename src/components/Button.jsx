@@ -1,6 +1,8 @@
 const VARIANTS = {
   primary:
     "bg-royal text-white shadow-[var(--shadow-button)] hover:bg-royal-dark active:bg-royal-dark disabled:bg-royal/50",
+  primaryDark:
+    "bg-royal-dark text-white shadow-[var(--shadow-button)] hover:brightness-110 active:brightness-110 disabled:bg-royal-dark/50",
   secondary:
     "bg-white text-ink border border-line hover:border-line-strong hover:bg-black/[0.02] disabled:opacity-50",
   ghost:
