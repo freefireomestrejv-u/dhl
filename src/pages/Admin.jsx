@@ -580,4 +580,29 @@ function AdminPanel({ topBar }) {
                 aria-label="Editar item"
               >
                 <IconEdit />
+             </button>
+
+              <button
+                onClick={() => handleDeleteClick(item)}
+                disabled={deletingId === item.id}
+                className={`flex h-9 shrink-0 items-center justify-center rounded-lg px-3 text-xs font-semibold transition-colors ${
+                  confirmingId === item.id
+                    ? "bg-error text-white"
+                    : "text-ink-muted hover:bg-error-tint hover:text-error"
+                }`}
+              >
+                {deletingId === item.id ? (
+                  <IconLoader className="size-4 animate-spin" />
+                ) : confirmingId === item.id ? (
+                  "Confirmar?"
+                ) : (
+                  <IconTrash />
+                )}
+              </button>
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
       
