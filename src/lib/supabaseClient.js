@@ -20,3 +20,16 @@ export const supabase = isSupabaseConfigured
 
 export const ITEMS_TABLE = "items";
 export const IMAGES_BUCKET = "item-images";
+export const ITEMS_TABLE = "items";
+export const IMAGES_BUCKET = "item-images";
+export const PLAYERS_TABLE = "players";
+
+// Unidades disponíveis na criação de usuário do ranking.
+export const UNITS = [
+  "Araçoiaba",
+  "Avenida Ipanema",
+  "São Bento",
+  "Carandá",
+  "Mineirão",
+  "Altos de Ipanema",
+];
