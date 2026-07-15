@@ -580,9 +580,9 @@ function AdminPanel({ topBar }) {
                 aria-label="Editar item"
               >
                 <IconEdit />
-               </button>
+              </button>
 
-               <button
+              <button
                 onClick={() => handleDeleteClick(item)}
                 disabled={deletingId === item.id}
                 className={`flex h-9 shrink-0 items-center justify-center rounded-lg px-3 text-xs font-semibold transition-colors ${
@@ -605,4 +605,3 @@ function AdminPanel({ topBar }) {
     </div>
   );
 }
-      
