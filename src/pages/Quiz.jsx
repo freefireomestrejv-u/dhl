@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   supabase,
   isSupabaseConfigured,
@@ -24,7 +24,11 @@ function shuffle(array) {
 }
 
 function normalize(value) {
-  return String(value ?? "").trim().toUpperCase();
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove acentos, til, cedilha etc.
+    .trim()
+    .toUpperCase();
 }
 
 export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, onPeakUpdate }) {
@@ -94,6 +98,18 @@ export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, o
   const total = items.length;
   const finished = status === "ready" && total > 0 && currentIndex >= total;
 
+  // No modo difícil, cada rodada sorteia se vai pedir o código ou o nome do
+  // item (itens do tipo "situação" continuam sempre pedindo o código/letra).
+  // useMemo garante que o sorteio só mude quando o item atual mudar, e não a
+  // cada tecla digitada.
+  const askMode = useMemo(() => {
+    if (!current || isSituacao || difficulty !== "dificil") return "code";
+    return Math.random() < 0.5 ? "code" : "name";
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current?.id, difficulty]);
+  const expectsText = isSituacao || askMode === "name";
+  const expectedAnswer = askMode === "name" ? current?.name : current?.code;
+
   // Ao concluir o quiz, se o resultado bateu o recorde (pico) do jogador,
   // atualiza o ranking. Só muda quando supera o pico anterior — nunca diminui.
   useEffect(() => {
@@ -121,7 +137,7 @@ export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, o
   function handleSubmit(e) {
     e.preventDefault();
     if (feedback || !current) return;
-    const correct = normalize(input) === normalize(current.code);
+    const correct = normalize(input) === normalize(expectedAnswer);
     setFeedback(correct ? "correct" : "incorrect");
     setScore((s) => ({
       correct: s.correct + (correct ? 1 : 0),
@@ -278,7 +294,11 @@ export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, o
             )}
 
             <p className="mt-6 text-xs font-semibold tracking-[0.18em] text-royal uppercase">
-              {isSituacao ? "Qual é a letra ou código?" : "Qual é o código?"}
+              {isSituacao
+                ? "Qual é a letra ou código?"
+                : askMode === "name"
+                  ? "Qual é o nome do item?"
+                  : "Qual é o código?"}
             </p>
             {!isSituacao && difficulty !== "dificil" && (
               <h2 className="mt-1 text-center text-2xl font-bold text-ink">
@@ -288,13 +308,15 @@ export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, o
 
             <input
               type="text"
-              inputMode={isSituacao ? "text" : "numeric"}
-              pattern={isSituacao ? undefined : "[0-9]*"}
+              inputMode={expectsText ? "text" : "numeric"}
+              pattern={expectsText ? undefined : "[0-9]*"}
               autoComplete="off"
               autoCorrect="off"
-              autoCapitalize="characters"
+              autoCapitalize={askMode === "name" ? "words" : "characters"}
               enterKeyHint="done"
-              placeholder={isSituacao ? "Ex: C" : "0000"}
+              placeholder={
+                isSituacao ? "Ex: C" : askMode === "name" ? "Ex: Maçã Gala" : "0000"
+              }
               value={input}
               disabled={Boolean(feedback)}
               onChange={(e) => setInput(e.target.value)}
@@ -323,10 +345,16 @@ export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, o
                 </p>
                 <div>
                   <p className="text-center text-xs font-semibold tracking-[0.15em] text-error/80 uppercase">
-                    Resposta correta
+                    {askMode === "name" ? "Nome correto" : "Resposta correta"}
                   </p>
-                  <div className="sticker-edge tnum mt-1.5 rounded-xl bg-white px-5 py-2 text-center font-mono text-xl font-semibold tracking-[0.2em] text-ink">
-                    {current.code}
+                  <div
+                    className={
+                      askMode === "name"
+                        ? "sticker-edge mt-1.5 rounded-xl bg-white px-5 py-2 text-center text-lg font-semibold text-ink"
+                        : "sticker-edge tnum mt-1.5 rounded-xl bg-white px-5 py-2 text-center font-mono text-xl font-semibold tracking-[0.2em] text-ink"
+                    }
+                  >
+                    {expectedAnswer}
                   </div>
                 </div>
               </div>
