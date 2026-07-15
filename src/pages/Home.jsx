@@ -35,11 +35,11 @@ export default function Home({
       </p>
 
       <div className="mt-10 flex w-full flex-col gap-3">
-        <Button variant="primary" className="w-full" onClick={onPlay}>
+        <Button variant="primaryDark" className="w-full" onClick={onPlay}>
           Teste de memória
         </Button>
         <Button
-          variant="secondary"
+          variant="primary"
           className="w-full"
           icon={<IconTarget className="size-4.5" />}
           onClick={onWeakSpot}
