@@ -30,7 +30,7 @@ export default function Home({ onPlay, onAdmin, onCodes, onInstructions, onRanki
         <Button variant="primary" className="w-full" onClick={onPlay}>
           Teste de memória
         </Button>
-        <Button variant="secondary" className="w-full" onClick={onRanking}>
+        <Button variant="tint" className="w-full" onClick={onRanking}>
           Ranking
         </Button>
         <Button variant="yellow" className="w-full" onClick={onCodes}>
