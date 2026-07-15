@@ -19,7 +19,7 @@ function shuffle(array) {
 }
 
 function normalize(value) {
-  return String(value ?? "").trim();
+  return String(value ?? "").trim().toUpperCase();
 }
 
 export default function Quiz({ onBack }) {
@@ -50,10 +50,10 @@ export default function Quiz({ onBack }) {
 
     const { data, error } = await supabase
       .from(ITEMS_TABLE)
-      .select("id, name, code, image_url");
+      .select("id, name, code, image_url, unit_type, item_type");
 
     if (error) {
-      setErrorMessage("Não foi possível carregar os produtos. Tente novamente.");
+      setErrorMessage("Não foi possível carregar os itens. Tente novamente.");
       setStatus("error");
       return;
     }
@@ -75,6 +75,7 @@ export default function Quiz({ onBack }) {
   }
 
   const current = items[currentIndex];
+  const isSituacao = current?.item_type === "situacao";
   const total = items.length;
   const finished = status === "ready" && total > 0 && currentIndex >= total;
 
@@ -130,7 +131,7 @@ export default function Quiz({ onBack }) {
         {status === "loading" && (
           <div className="flex flex-col items-center gap-3 text-ink-muted">
             <IconLoader className="size-6 animate-spin" />
-            <p className="text-sm">Carregando produtos…</p>
+            <p className="text-sm">Carregando…</p>
           </div>
         )}
 
@@ -152,8 +153,8 @@ export default function Quiz({ onBack }) {
               <IconImageOff className="size-6" />
             </div>
             <p className="max-w-xs text-[15px] text-ink-muted">
-              Ainda não há produtos cadastrados. Peça para um administrador
-              cadastrar itens no painel do admin.
+              Ainda não há itens cadastrados. Peça para um administrador
+              cadastrar no painel do admin.
             </p>
             <Button variant="secondary" onClick={onBack}>
               Voltar ao início
@@ -172,7 +173,7 @@ export default function Quiz({ onBack }) {
             <div>
               <h2 className="text-2xl font-bold text-ink">Quiz concluído!</h2>
               <p className="mt-1 text-[15px] text-ink-muted">
-                Você acertou {score.correct} de {total} produtos.
+                Você acertou {score.correct} de {total}.
               </p>
             </div>
 
@@ -204,41 +205,53 @@ export default function Quiz({ onBack }) {
             key={current.id}
             className="flex w-full animate-fade-slide flex-col items-center"
           >
-            <div className="aspect-4/3 w-full overflow-hidden rounded-2xl bg-royal-tint/40">
-              {current.image_url ? (
-                <img
-                  src={current.image_url}
-                  alt={current.name}
-                  className="size-full object-cover"
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center text-royal/40">
-                  <IconImageOff className="size-10" />
-                </div>
-              )}
-            </div>
+            {isSituacao ? (
+              <div className="flex min-h-40 w-full flex-col items-center justify-center rounded-2xl bg-royal-tint/40 px-6 py-8 text-center">
+                <p className="text-lg leading-relaxed font-medium text-ink">
+                  {current.name}
+                </p>
+              </div>
+            ) : (
+              <div className="aspect-4/3 w-full overflow-hidden rounded-2xl bg-royal-tint/40">
+                {current.image_url ? (
+                  <img
+                    src={current.image_url}
+                    alt={current.name}
+                    fetchpriority="high"
+                    decoding="async"
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <div className="flex size-full items-center justify-center text-royal/40">
+                    <IconImageOff className="size-10" />
+                  </div>
+                )}
+              </div>
+            )}
 
             <p className="mt-6 text-xs font-semibold tracking-[0.18em] text-royal uppercase">
-              Qual é o código?
+              {isSituacao ? "Qual é a letra ou código?" : "Qual é o código?"}
             </p>
-            <h2 className="mt-1 text-center text-2xl font-bold text-ink">
-              {current.name}
-            </h2>
+            {!isSituacao && (
+              <h2 className="mt-1 text-center text-2xl font-bold text-ink">
+                {current.name}
+              </h2>
+            )}
 
             <input
               type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
+              inputMode={isSituacao ? "text" : "numeric"}
+              pattern={isSituacao ? undefined : "[0-9]*"}
               autoComplete="off"
               autoCorrect="off"
-              autoCapitalize="off"
+              autoCapitalize="characters"
               enterKeyHint="done"
-              placeholder="0000"
+              placeholder={isSituacao ? "Ex: C" : "0000"}
               value={input}
               disabled={Boolean(feedback)}
               onChange={(e) => setInput(e.target.value)}
               autoFocus
-              className="tnum mt-6 w-full rounded-2xl border border-line bg-white px-5 py-4 text-center text-2xl font-semibold tracking-[0.3em] text-ink placeholder:text-line-strong focus:border-royal disabled:bg-black/[0.02]"
+              className="tnum mt-6 w-full rounded-2xl border border-line bg-white px-5 py-4 text-center text-2xl font-semibold uppercase tracking-[0.3em] text-ink placeholder:text-line-strong focus:border-royal disabled:bg-black/[0.02]"
             />
 
             {!feedback && (
@@ -262,7 +275,7 @@ export default function Quiz({ onBack }) {
                 </p>
                 <div>
                   <p className="text-center text-xs font-semibold tracking-[0.15em] text-error/80 uppercase">
-                    Código correto
+                    Resposta correta
                   </p>
                   <div className="sticker-edge tnum mt-1.5 rounded-xl bg-white px-5 py-2 text-center font-mono text-xl font-semibold tracking-[0.2em] text-ink">
                     {current.code}
