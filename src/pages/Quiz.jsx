@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { supabase, isSupabaseConfigured, ITEMS_TABLE } from "../lib/supabaseClient";
+import {
+  supabase,
+  isSupabaseConfigured,
+  ITEMS_TABLE,
+  PLAYERS_TABLE,
+} from "../lib/supabaseClient";
 import Button from "../components/Button";
 import {
   IconArrowLeft,
@@ -22,7 +27,7 @@ function normalize(value) {
   return String(value ?? "").trim().toUpperCase();
 }
 
-export default function Quiz({ onBack }) {
+export default function Quiz({ onBack, player, onPeakUpdate }) {
   const [status, setStatus] = useState("loading"); // loading | error | ready
   const [errorMessage, setErrorMessage] = useState("");
   const [items, setItems] = useState([]);
@@ -30,6 +35,14 @@ export default function Quiz({ onBack }) {
   const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState(null); // null | 'correct' | 'incorrect'
   const [score, setScore] = useState({ correct: 0, wrong: 0 });
+
+  // pico (recorde pessoal) do jogador logado, atualizado quando o quiz termina
+  const [peak, setPeak] = useState({
+    best_correct: player?.best_correct ?? 0,
+    best_wrong: player?.best_wrong ?? 0,
+  });
+  const [peakSaved, setPeakSaved] = useState(false);
+  const [isNewRecord, setIsNewRecord] = useState(false);
 
   useEffect(() => {
     loadItems();
@@ -72,12 +85,38 @@ export default function Quiz({ onBack }) {
     setScore({ correct: 0, wrong: 0 });
     setFeedback(null);
     setInput("");
+    setPeakSaved(false);
+    setIsNewRecord(false);
   }
 
   const current = items[currentIndex];
   const isSituacao = current?.item_type === "situacao";
   const total = items.length;
   const finished = status === "ready" && total > 0 && currentIndex >= total;
+
+  // Ao concluir o quiz, se o resultado bateu o recorde (pico) do jogador,
+  // atualiza o ranking. Só muda quando supera o pico anterior — nunca diminui.
+  useEffect(() => {
+    if (!finished || !player || peakSaved) return;
+    setPeakSaved(true); // marca antes de chamar, evita disparo duplo
+
+    if (score.correct <= peak.best_correct) return;
+
+    (async () => {
+      const { error } = await supabase
+        .from(PLAYERS_TABLE)
+        .update({ best_correct: score.correct, best_wrong: score.wrong })
+        .eq("id", player.id);
+
+      if (!error) {
+        const nextPeak = { best_correct: score.correct, best_wrong: score.wrong };
+        setPeak(nextPeak);
+        setIsNewRecord(true);
+        onPeakUpdate?.(nextPeak);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished]);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -175,6 +214,11 @@ export default function Quiz({ onBack }) {
               <p className="mt-1 text-[15px] text-ink-muted">
                 Você acertou {score.correct} de {total}.
               </p>
+              {isNewRecord && (
+                <p className="mt-1 text-sm font-semibold text-royal">
+                  🏆 Novo recorde pessoal!
+                </p>
+              )}
             </div>
 
             <div className="flex w-full gap-3">
