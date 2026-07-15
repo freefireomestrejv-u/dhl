@@ -27,7 +27,7 @@ function normalize(value) {
   return String(value ?? "").trim().toUpperCase();
 }
 
-export default function Quiz({ onBack, player, onPeakUpdate }) {
+export default function Quiz({ onBack, player, difficulty, onChangeDifficulty, onPeakUpdate }) {
   const [status, setStatus] = useState("loading"); // loading | error | ready
   const [errorMessage, setErrorMessage] = useState("");
   const [items, setItems] = useState([]);
@@ -233,7 +233,11 @@ export default function Quiz({ onBack, player, onPeakUpdate }) {
             </div>
 
             <div className="mt-2 flex w-full flex-col gap-3">
-              <Button variant="primary" className="w-full" onClick={restart}>
+              <Button
+                variant="primary"
+                className="w-full"
+                onClick={onChangeDifficulty ?? restart}
+              >
                 Jogar de novo
               </Button>
               <Button variant="ghost" className="w-full" onClick={onBack}>
@@ -276,7 +280,7 @@ export default function Quiz({ onBack, player, onPeakUpdate }) {
             <p className="mt-6 text-xs font-semibold tracking-[0.18em] text-royal uppercase">
               {isSituacao ? "Qual é a letra ou código?" : "Qual é o código?"}
             </p>
-            {!isSituacao && (
+            {!isSituacao && difficulty !== "dificil" && (
               <h2 className="mt-1 text-center text-2xl font-bold text-ink">
                 {current.name}
               </h2>
